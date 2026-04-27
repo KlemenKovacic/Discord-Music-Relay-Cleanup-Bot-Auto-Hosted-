@@ -1,6 +1,6 @@
 # Zaženi PowerShell kot Administrator!
 # PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
-# irm https://github.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/blob/main/setup.ps1 | iex
+# irm https://raw.githubusercontent.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/main/setup.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 $BOT_DIR = "C:\bots"
@@ -54,7 +54,7 @@ if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
 
 # 5. Prenesi bot.py in watchbot.py iz GitHuba
 Write-Host "`n[5/5] Prenašam skripte..."
-$REPO = "https://raw.githubusercontent.com/TVOJE_IME/TVOJ_REPO/main"
+$REPO = "https://raw.githubusercontent.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/main"
 Invoke-WebRequest "$REPO/bot.py"      -OutFile "$BOT_DIR\bot.py"
 Invoke-WebRequest "$REPO/watchbot.py" -OutFile "$BOT_DIR\watchbot.py"
 Write-Host "  bot.py in watchbot.py v C:\bots\" -ForegroundColor Green
