@@ -61,7 +61,8 @@ Write-Host "  bot.py in watchbot.py v C:\bots\" -ForegroundColor Green
 
 # 6. Task Scheduler
 Write-Host "`nNastavljam Task Scheduler..."
-$pythonw = (Get-Command pythonw.exe -ErrorAction SilentlyContinue)?.Source
+$pythonwCmd = Get-Command pythonw.exe -ErrorAction SilentlyContinue
+$pythonw = if ($pythonwCmd) { $pythonwCmd.Source } else { "pythonw.exe" }
 if (-not $pythonw) { $pythonw = "pythonw.exe" }
 
 $action  = New-ScheduledTaskAction -Execute $pythonw -Argument "$BOT_DIR\watchbot.py" -WorkingDirectory $BOT_DIR
