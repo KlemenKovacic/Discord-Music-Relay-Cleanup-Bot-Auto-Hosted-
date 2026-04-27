@@ -63,13 +63,13 @@ Pred zagonom uredi naslednje spremenljivke:
 * **`relay_bot.log`**: Tukaj vidiš, katere pesmi so bile preusmerjene in morebitne napake v delovanju bota.
 * **`watchbot.log`**: Tukaj vidiš vsak ponovni zagon bota.
 
-## Inštalacija: 
+## Inštalacija preko terminala:
 1. * Run PowerShell as Administrator
 2. * Copy and Execute:
       * `Set-ExecutionPolicy Bypass -Scope Process -Force`
       * `irm https://raw.githubusercontent.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/main/setup.ps1 | iex`
-3. * Vse omenjeno se bo postavilo samo ena za drugo. Kaj se postavlja lahko vidite v `setup.ps1` repo.
-4. * Vse kar morate sami narediti je poskrbeti, da imate music bot-a / bote na svojemu strežniku in svoj "relaybot" kreiran na DDP, kjer se lahko ustavi lasten `TOKEN`.
+ * Vse omenjeno se bo postavilo samo ena za drugo. Kaj se postavlja lahko vidite v `setup.ps1` repo.
+ * Vse kar morate sami narediti je poskrbeti, da imate music bot-a / bote na svojemu strežniku in svoj "relaybot" kreiran na DDP, kjer se lahko ustavi lasten `TOKEN`.
 
 ## Ostalo
 
