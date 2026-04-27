@@ -32,24 +32,38 @@ try {
 } catch {}
 
 if (-not $pythonOk) {
-Write-Host "  Python 3.12 ni najden. Prenašam (~25MB)..."
-$pyInstaller = "$env:TEMP\python312.exe"
-$webClient = New-Object System.Net.WebClient
-$webClient.DownloadFile(
-    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe",
-    $pyInstaller
-)
-Write-Host "  Prenos končan. Nameščam v C:\Python312..."
-Start-Process $pyInstaller -ArgumentList "/quiet TargetDir=C:\Python312 InstallAllUsers=0 PrependPath=1" -Wait
-Start-Sleep -Seconds 5
+    Write-Host "  Python 3.12 ni najden. Prenašam (~25MB)..."
+    $pyInstaller = "$env:TEMP\python312.exe"
 
-# Ročno dodaj v PATH trenutne seje
-$env:Path = "C:\Python312;C:\Python312\Scripts;" + $env:Path
-[System.Environment]::SetEnvironmentVariable("Path", "C:\Python312;C:\Python312\Scripts;" + [System.Environment]::GetEnvironmentVariable("Path","Machine"), "Machine")
+    $webClient = New-Object System.Net.WebClient
+    $webClient.add_DownloadProgressChanged({
+        $percent = $_.ProgressPercentage
+        $bar = "#" * [math]::Floor($percent / 5)
+        $empty = "-" * (20 - [math]::Floor($percent / 5))
+        Write-Host -NoNewline "`r  Prenos: [$bar$empty] $percent%   "
+    })
+    $task = $webClient.DownloadFileTaskAsync(
+        "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe",
+        $pyInstaller
+    )
+    while (-not $task.IsCompleted) { Start-Sleep -Milliseconds 200 }
+    Write-Host "`r  Prenos: [####################] 100%   " -ForegroundColor Green
 
-# Preveri
-$ver = & "C:\Python312\python.exe" --version 2>&1
-Write-Host "  Python nameščen: $ver" -ForegroundColor Green
+    Write-Host "  Nameščam v C:\Python312..."
+    $install = Start-Process $pyInstaller -ArgumentList "/quiet TargetDir=C:\Python312 InstallAllUsers=0 PrependPath=1" -PassThru
+    $dots = 0
+    while (-not $install.HasExited) {
+        $dots = ($dots % 3) + 1
+        Write-Host -NoNewline "`r  Nameščam$('.' * $dots)   "
+        Start-Sleep -Milliseconds 500
+    }
+    Write-Host "`r  Namestitev končana.   " -ForegroundColor Green
+
+    Start-Sleep -Seconds 2
+    $env:Path = "C:\Python312;C:\Python312\Scripts;" + $env:Path
+    [System.Environment]::SetEnvironmentVariable("Path", "C:\Python312;C:\Python312\Scripts;" + [System.Environment]::GetEnvironmentVariable("Path","Machine"), "Machine")
+    $ver = & "C:\Python312\python.exe" --version 2>&1
+    Write-Host "  Python nameščen: $ver" -ForegroundColor Green
 } else {
     Write-Host "  Python OK ($ver)" -ForegroundColor Green
 }
