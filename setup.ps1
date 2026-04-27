@@ -1,6 +1,6 @@
 # Zaženi PowerShell kot Administrator!
 # PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; .\setup.ps1
-# irm https://raw.githubusercontent.com/TVOJE_IME/TVOJ_REPO/main/setup.ps1 | iex
+# irm https://github.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/blob/main/setup.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 $BOT_DIR = "C:\bots"
