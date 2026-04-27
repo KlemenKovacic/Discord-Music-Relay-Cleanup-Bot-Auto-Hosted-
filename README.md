@@ -2,6 +2,7 @@
 
 Sistem dveh skript, zasnovan za popolnoma avtonomno delovanje na Windows okolju, kjer več ljudi hkrati želi predvajati glasbo — namesto kaosa v lobby kanalu bot ukaze tiho prestrezе, jih preusmeri v #music, in channel ostane čist.
 
+
 ## Arhitektura sistema
 
 Sistem je sestavljen iz dveh delov za maksimalno stabilnost:
@@ -27,8 +28,8 @@ Sistem je sestavljen iz dveh delov za maksimalno stabilnost:
   * Bot bo potreboval potrebna dovoljenja za pravilno delovanje, ko pride v vaš Discord strežnik. Dodelijo se samo glavne stvari potrebne za delovanje. To se vse naredi v DDP (Discord Developer Portal), ob vhodu v strežnik se lahko odločite kaj naj bot obdrži.
     
   * **Pomembne funkciije so:**
-    * *Text Permissions;* `Send Messages, Manage Messages, Read Message History`
-    * *General Permissions;* `View Channels` 
+    * Text Permissions; `Send Messages, Manage Messages, Read Message History`
+    * General Permissions; `View Channels` 
 
 ## Nastavitev avtomatizacije
 
@@ -36,13 +37,15 @@ Namesto da bi v Task Scheduler dodali bota, dodamo samo **nadzornika**, ki bo na
 
 ### Windows Task Scheduler konfiguracija:
 1.  **Ustvari novo opravilo (Create Task)** in ga poljubno poimenujemo npr. `watchbot`.
-2.  **Triggers:** Nastavi **At system startup**.
+2.  **Triggers:**
+    * **At system startup**
+    * **On a schedule:** Daily, Repeat every hour, Indefinitely. (V primeru, da bi kaj zrušilo program, pogleda vsako uro in se osveži)
 3.  **Actions:**
     * **Program/script:** `C:\Python312\pythonw.exe`
     * **Add arguments:** `C:\bots\watchbot.py`
     * **Start in:** `C:\bots`
 4.  **Settings:** Obkljukaj "If the task fails, restart every 1 minute".
-    * **Rules:** `Stop the existing instance`
+    * **Rules:** `Do not start a new instance`
     * **Odkljukaj**: `Stop running if it runs longer than 3 days`
 
 **Rezultat:** Ob zagonu računalnika se zažene `watchbot.py`, ki takoj dvigne `bot.py`. Če želite posodobiti kodo, preprosto shranite `bot.py` in v Discordu napišete `!restart`.
@@ -60,9 +63,18 @@ Pred zagonom uredi naslednje spremenljivke:
 * **`relay_bot.log`**: Tukaj vidiš, katere pesmi so bile preusmerjene in morebitne napake v delovanju bota.
 * **`watchbot.log`**: Tukaj vidiš vsak ponovni zagon bota.
 
+## Inštalacija: 
+1. * Run PowerShell as Administrator
+2. * Copy and Execute:
+      * `Set-ExecutionPolicy Bypass -Scope Process -Force`
+      * `irm https://raw.githubusercontent.com/KlemenKovacic/Discord-Music-Relay-Cleanup-Bot-Auto-Hosted-/main/setup.ps1 | iex`
+3. * Vse omenjeno se bo postavilo samo ena za drugo. Kaj se postavlja lahko vidite v `setup.ps1` repo.
+4. * Vse kar morate sami narediti je poskrbeti, da imate music bot-a / bote na svojemu strežniku in svoj "relaybot" kreiran na DDP, kjer se lahko ustavi lasten `TOKEN`.
+
 ## Ostalo
 
+* ###### Ukaz: `!Restart`
 * ###### Discord Portal: https://discord.com/developers/home
-* ###### Music Relay Bot:[https://discord.com/oauth2/authorize?client_id=1435793486141067527](https://discord.com/oauth2/authorize?client_id=1435793486141067527&permissions=76800&integration_type=0&scope=bot)
-* ##### Ukaz: `!Restart`
-* ##### Najbolj fleksibilen music bot je **Jockie Music**, ki ni vezan preko Discordovega API–ja oz. komandne vrstice: `/`, kjer ima `RelayBot` Bot največ moči. Dostop do Jockie Muisc: https://discord.com/oauth2/authorize?client_id=411916947773587456&permissions=8&scope=applications.commands+bot
+* ###### Inštalacija bi morala tudi delovati v Windows Sandboxu za varno testiranje.  
+* ###### Music RelayBot: [https://discord.com/oauth2/authorize?client_id=1435793486141067527](https://discord.com/oauth2/authorize?client_id=1435793486141067527&permissions=76800&integration_type=0&scope=bot)
+* ###### Najbolj fleksibilen music bot je **Jockie Music**, ki ni vezan preko Discordovega API–ja oz. komandne vrstice: `/`, kjer ima `RelayBot` najmanj limitaci pri music botu. Dostop do Jockie Muisc: https://www.jockiemusic.com/
