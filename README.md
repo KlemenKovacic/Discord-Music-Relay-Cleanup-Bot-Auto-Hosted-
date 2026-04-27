@@ -1,47 +1,68 @@
-# 🎵 Discord Relay & Cleanup Bot (Auto-Hosted)
+# 🎶 Discord Music Bot (*RelayBot*)
 
+Sistem dveh skript, zasnovan za popolnoma avtonomno delovanje na Windows okolju, kjer več ljudi hkrati želi predvajati glasbo — namesto kaosa v lobby kanalu bot ukaze tiho prestrezе, jih preusmeri v #music, in channel ostane čist.
 
-## 🧠 Kako deluje skripta?
+## Arhitektura sistema
 
-Glavna skripta (`bot.py`) deluje na treh nivojih:
+Sistem je sestavljen iz dveh delov za maksimalno stabilnost:
 
-1. **Preusmerjanje (Relaying):** * Uporabniki v glavnem klepetu (Lobbyju) vpišejo ukaz, npr. `m!play eminem`.
-   * Bot to zazna, preko knjižnice `yt-dlp` v ozadju preveri pravi naslov pesmi in ta ukaz preusmeri v read-only kanal `#music`.
-2. **Strogo čiščenje (Strict Cleanup):**
-   * Bot iz Lobbyja takoj izbriše vse glasbene ukaze in napačne vnose (npr. `/play`).
-   * Prav tako zazna obvestila drugih botov (npr. ko Jockie Music zapusti kanal) in jih po nekaj sekundah avtomatsko izbriše.
-3. **Samo-zaščita (Single Instance & Heartbeat):**
-   * **Mutex:** Preprečuje, da bi sistem hkrati zagnal dve kopiji bota (onemogoči podvajanje procesov).
-   * **Heartbeat:** Skripta vsakih 20 sekund zapiše trenutni čas v datoteko `bot.heartbeat`. Zunanja Watchdog skripta to datoteko preverja in bota ponovno zažene, če ta zamrzne.
+1.  **`bot.py` (Srce sistema):**
+    * **Relaying:** Preusmerja `m!play` ukaze v namenski `#music` kanal z avtomatskim iskanjem naslovov pesmi preko `yt-dlp`.
+    * **Cleanup:** V kanalu `lobby` takoj briše napačne ukaze (npr. `/play`) in po 5 sekundah odstrani obvestila drugih glasbenih botov (Jockie Music, Chip, itd.).
+    * **Smart Restart:** Omogoča ukaz `!restart`, ki varno ugasne bota, da se lahko naloži nova koda.
+    * **Preko yt-dlp** poišče pravi naslov pesmi preden jo zapiše. 
 
-## ⚙️ Predpogoji za izvedbo
+2.  **`watchbot.py` (Nadzornik):**
+    * Njegova edina naloga je, da poganja `bot.py`.
+    * Takoj ko se `bot.py` ugasne (zaradi napake ali ukaza `!restart`), ga `watchbot.py` v 1 sekundi ponovno zažene. **Ponovni zagon varira med 1–10 sekund.** 
+    * S tem se izognemo daljšemu čakanju na Windows Task Scheduler – ki bi ga bili, sicer, deležni. 
+    * Ni pollinga, ni timerjev — OS-level blokirajoč klic, praktično 0% CPU.
 
-* **Python:** Verzija 3.12 ali 3.13 (nameščena v fiksno mapo, npr. `C:\Python312`).
+## Predpogoji
+
+* **Python 3.12**
 * **Knjižnice:** `pip install discord.py yt-dlp`
-* **Discord Bot:** Ustvarjen bot na Discord Developer Portalu z omogočenim **Message Content Intent** in pridobljenim **Tokenom**.
+* **FFmpeg:** Potreben za pravilno delovanje `yt-dlp` (v sistemski poti).
+* **Discord Bot:** Ustvarjen Bot na Discord Developer Portalu z omogočenim pravicami in pridobljenim Tokenom.
+  * Bot bo potreboval potrebna dovoljenja za pravilno delovanje, ko pride v vaš Discord strežnik. Dodelijo se samo glavne stvari potrebne za delovanje. To se vse naredi v DDP (Discord Developer Portal), ob vhodu v strežnik se lahko odločite kaj naj bot obdrži.
+    
+  * **Pomembne funkciije so:**
+    * *Text Permissions;* `Send Messages, Manage Messages, Read Message History`
+    * *General Permissions;* `View Channels` 
 
-## 🛠️ Postavitev avtomatizacije (Windows Task Scheduler)
+## Nastavitev avtomatizacije
 
-Da bot deluje 24/7 in preživi ponovne zagone računalnika, uporabljamo Windows Opravilnik nalog (Task Scheduler).
+Namesto da bi v Task Scheduler dodali bota, dodamo samo **nadzornika**, ki bo nato upravljal bota.
 
-### Koraki za konfiguracijo glavnega opravila:
-1. Odprite Task Scheduler in izberite **Create Task**.
-2. **Zavihek General:** * Poimenujte opravilo (npr. `DiscordBot`).
-   * Obkljukajte **Run whether user is logged on or not** (da deluje v ozadju kot servis).
-3. **Zavihek Triggers:**
-   * Dodajte nov prožilec in izberite **At startup** (zažene takoj ob vklopu PC-ja).
-4. **Zavihek Actions:**
-   * **Action:** `Start a program`
-   * **Program/script:** Pot do Pythona (npr. `C:\Python312\python.exe`).
-   * **Add arguments:** Pot do skripte (npr. `C:\bots\bot.py`).
-   * **Start in:** Mapa, kjer je skripta (npr. `C:\bots\`).
-5. **Zavihek Settings (KLJUČNO):**
-   * Obkljukajte *If the task fails, restart every: 1 minute*.
-   * Na dnu pri *If the task is already running, then the following rule applies*, izberite **Stop the existing instance**. To zagotovi, da se ob posodobitvi kode stara verzija ugasne in nova čisto zažene.
+### Windows Task Scheduler konfiguracija:
+1.  **Ustvari novo opravilo (Create Task)** in ga poljubno poimenujemo npr. `watchbot`.
+2.  **Triggers:** Nastavi **At system startup**.
+3.  **Actions:**
+    * **Program/script:** `C:\Python312\pythonw.exe`
+    * **Add arguments:** `C:\bots\watchbot.py`
+    * **Start in:** `C:\bots`
+4.  **Settings:** Obkljukaj "If the task fails, restart every 1 minute".
+    * **Rules:** `Stop the existing instance`
+    * **Odkljukaj**: `Stop running if it runs longer than 3 days`
 
-## 🔧 Prilagoditev kode
+**Rezultat:** Ob zagonu računalnika se zažene `watchbot.py`, ki takoj dvigne `bot.py`. Če želite posodobiti kodo, preprosto shranite `bot.py` in v Discordu napišete `!restart`.
 
-Pred zagonom odprite `bot.py` in prilagodite osnovne nastavitve pod sekcijo `# --- KONFIGURACIJA ---`:
-* `TOKEN` = Žeton vašega bota.
-* `MUSIC_CHANNEL_NAME` = Ime kanala, kamor se preusmerja glasba (npr. `"music"`).
-* `OTHER_BOTS` = Seznam imen botov, za katerimi naj skripta čisti.
+## Konfiguracija (bot.py)
+
+Pred zagonom uredi naslednje spremenljivke:
+* `TOKEN`: Žeton bota, ki ga boste videli v Discord Dev Portalu, kjer je Bot narejen.  
+* `OWNER_ID`: Vaš Discord User ID (za dostop do `!restart` ukaza). ID pridobite v Discordu na svojem profilu, s predpostavko da vklopite `developer mode` v nastavitvah. 
+* `LOBBY_CHANNEL_NAME`: Ime kanala za čiščenje (default: `"lobby"`).
+* `MUSIC_CHANNEL_NAME`: Ime kanala za preusmeritev (default: `"music"`).
+
+## Logiranje in Diagnostika
+
+* **`relay_bot.log`**: Tukaj vidiš, katere pesmi so bile preusmerjene in morebitne napake v delovanju bota.
+* **`watchbot.log`**: Tukaj vidiš vsak ponovni zagon bota.
+
+## Ostalo
+
+* ###### Discord Portal: https://discord.com/developers/home
+* ###### Music Relay Bot:[https://discord.com/oauth2/authorize?client_id=1435793486141067527](https://discord.com/oauth2/authorize?client_id=1435793486141067527&permissions=76800&integration_type=0&scope=bot)
+* ##### Ukaz: `!Restart`
+* ##### Najbolj fleksibilen music bot je **Jockie Music**, ki ni vezan preko Discordovega API–ja oz. komandne vrstice: `/`, kjer ima `RelayBot` Bot največ moči. Dostop do Jockie Muisc: https://discord.com/oauth2/authorize?client_id=411916947773587456&permissions=8&scope=applications.commands+bot
