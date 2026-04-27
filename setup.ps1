@@ -26,9 +26,13 @@ if (Test-Path $BOT_DIR) {
 # 2. Python
 Write-Host "`n[2/6] Preverjam Python..."
 $pythonOk = $false
+$pythonExe = "C:\Python312\python.exe"
 try {
     $ver = python --version 2>&1
-    if ($ver -match "3\.1[2-9]|3\.[2-9]\d") { $pythonOk = $true }
+    if ($ver -match "3\.1[2-9]|3\.[2-9]\d") {
+        $pythonOk = $true
+        $pythonExe = (Get-Command python).Source
+    }
 } catch {}
 
 if (-not $pythonOk) {
@@ -70,8 +74,8 @@ if (-not $pythonOk) {
 
 # 3. Knjižnice
 Write-Host "`n[3/6] Nameščam knjižnice..."
-& "C:\Python312\python.exe" -m pip install --upgrade pip --quiet
-& "C:\Python312\python.exe" -m pip install discord.py yt-dlp --quiet
+& $pythonExe -m pip install --upgrade pip --quiet
+& $pythonExe -m pip install discord.py yt-dlp --quiet
 Write-Host "  Knjižnice nameščene." -ForegroundColor Green
 
 # 4. FFmpeg
