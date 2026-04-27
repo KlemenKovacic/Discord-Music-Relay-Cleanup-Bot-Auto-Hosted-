@@ -101,13 +101,14 @@ Write-Host "  Skripte prenesene." -ForegroundColor Green
 # 6. Task Scheduler
 Write-Host "`n[6/6] Nastavljam Task Scheduler..."
 $pythonwCmd = Get-Command pythonw.exe -ErrorAction SilentlyContinue
-$pythonw = if ($pythonwCmd) { $pythonwCmd.Source } else { "pythonw.exe" }
+$pythonw = if ($pythonwCmd) { $pythonwCmd.Source } else { "C:\Python312\pythonw.exe" }
 
-$action   = New-ScheduledTaskAction -Execute $pythonw -Argument "$BOT_DIR\watchbot.py" -WorkingDirectory $BOT_DIR
-$trigger  = New-ScheduledTaskTrigger -AtStartup
-$settings = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
-Register-ScheduledTask -TaskName "DiscordBotWatcher" -Action $action -Trigger $trigger -Settings $settings -RunLevel Highest -Force | Out-Null
-Write-Host "  Task Scheduler nastavljen." -ForegroundColor Green
+$action    = New-ScheduledTaskAction -Execute $pythonw -Argument "$BOT_DIR\watchbot.py" -WorkingDirectory $BOT_DIR
+$trigStart = New-ScheduledTaskTrigger -AtStartup
+$trigHour = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 5) -RepetitionDuration ([TimeSpan]::MaxValue)
+$settings  = New-ScheduledTaskSettingsSet -ExecutionTimeLimit 0 -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskName "DiscordBotWatcher" -Action $action -Trigger @($trigStart, $trigHour) -Settings $settings -RunLevel Highest -Force | Out-Null
+Write-Host "  Task Scheduler nastavljen (startup + vsako uro)." -ForegroundColor Green
 
 # Zaženi takoj
 Write-Host "`nZaganjam watchbot..."
