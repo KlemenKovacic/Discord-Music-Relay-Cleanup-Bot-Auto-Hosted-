@@ -20,12 +20,19 @@ try {
 } catch {}
 
 if (-not $pythonOk) {
-    Write-Host "  Python 3.12 ni najden. Prenašam..."
+    Write-Host "  Python 3.12 ni najden. Prenašam (~25MB)..."
     $pyInstaller = "$env:TEMP\python312.exe"
-    Invoke-WebRequest "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe" -OutFile $pyInstaller
+    $webClient = New-Object System.Net.WebClient
+    $webClient.DownloadFile(
+    "https://www.python.org/ftp/python/3.12.0/python-3.12.0-amd64.exe",
+    $pyInstaller
+)
+    Write-Host "  Prenos končan. Nameščam..."
     Start-Process $pyInstaller -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait
-    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
-    Write-Host "  Python 3.12 nameščen." -ForegroundColor Green
+    Write-Host "  Čakam da se PATH osveži..."
+    Start-Sleep -Seconds 5
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+    Write-Host "  Python 3.12 nameščen." -ForegroundColor Green  
 } else {
     Write-Host "  Python OK ($ver)" -ForegroundColor Green
 }
